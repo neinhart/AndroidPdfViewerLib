@@ -32,12 +32,14 @@ import xyz.guutong.androidpdfviewer.Utils.FileUtil;
 public class PdfViewActivity extends AppCompatActivity implements DownloadFile.Listener, OnPageChangeListener, OnLoadCompleteListener {
 
     public static final String EXTRA_PDF_URL = "EXTRA_PDF_URL";
+    public static final String EXTRA_PDF_URI = "EXTRA_PDF_URI";
     public static final String EXTRA_PDF_TITLE = "EXTRA_PDF_TITLE";
     public static final String EXTRA_SHOW_SCROLL = "EXTRA_SHOW_SCROLL";
     public static final String EXTRA_SWIPE_HORIZONTAL = "EXTRA_SWIPE_HORIZONTAL";
     public static final String EXTRA_SHOW_SHARE_BUTTON = "EXTRA_SHOW_SHARE_BUTTON";
     public static final String EXTRA_SHOW_CLOSE_BUTTON = "EXTRA_SHOW_CLOSE_BUTTON";
     public static final String EXTRA_TOOLBAR_COLOR = "EXTRA_TOOLBAR_COLOR";
+    public static final String EXTRA_PAGE_NUM = "EXTRA_PAGE_NUM";
 
     private static final int MENU_CLOSE = Menu.FIRST;
     private static final int MENU_SHARE = Menu.FIRST + 1;
@@ -47,12 +49,15 @@ public class PdfViewActivity extends AppCompatActivity implements DownloadFile.L
     private Intent intentUrl;
     private ProgressBar progressBar;
     private String pdfUrl;
+    private String pdfUri;
     private Boolean showScroll;
     private Boolean swipeHorizontal;
     private String toolbarColor = "#1191d5";
     private String toolbarTitle;
     private Boolean showShareButton;
     private Boolean showCloseButton;
+
+    private int pageNum;
 
     private DefaultScrollHandle scrollHandle;
 
@@ -63,6 +68,7 @@ public class PdfViewActivity extends AppCompatActivity implements DownloadFile.L
 
         intentUrl = getIntent();
         pdfUrl = intentUrl.getStringExtra(EXTRA_PDF_URL);
+        pdfUri = intentUrl.getStringExtra(EXTRA_PDF_URI);
         toolbarTitle = intentUrl.getStringExtra(EXTRA_PDF_TITLE) == null ? "" : intentUrl.getStringExtra(EXTRA_PDF_TITLE);
         toolbarColor = intentUrl.getStringExtra(EXTRA_TOOLBAR_COLOR) == null ? toolbarColor : intentUrl.getStringExtra(EXTRA_TOOLBAR_COLOR);
         showScroll = intentUrl.getBooleanExtra(EXTRA_SHOW_SCROLL, false);
@@ -94,7 +100,11 @@ public class PdfViewActivity extends AppCompatActivity implements DownloadFile.L
 
         progressBar.setVisibility(View.VISIBLE);
 
-        downloadPdf(pdfUrl);
+        if(pdfUrl!=null) {
+            downloadPdf(pdfUrl);
+        } else if (pdfUri!=null) {
+            loadPdf(pdfUri);
+        }
     }
 
     private void downloadPdf(String inPdfUrl) {
@@ -190,10 +200,26 @@ public class PdfViewActivity extends AppCompatActivity implements DownloadFile.L
     @Override
     public void loadComplete(int nbPages) {
         progressBar.setVisibility(View.GONE);
+        pageNum = nbPages;
+        Intent result = new Intent();
+        result.putExtra(EXTRA_PAGE_NUM, Integer.toString(pageNum));
+        setResult(RESULT_OK, result);
     }
 
     @Override
     public void onPageChanged(int page, int pageCount) {
 
+    }
+
+    private void loadPdf(String strPdfUri) {
+        Uri pdfUri = Uri.parse(strPdfUri);
+        pdfView.fromUri(pdfUri)
+                .defaultPage(0)
+                .onPageChange(this)
+                .enableAnnotationRendering(true)
+                .onLoad(this)
+                .scrollHandle(scrollHandle)
+                .swipeHorizontal(swipeHorizontal)
+                .load();
     }
 }

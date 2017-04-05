@@ -6,12 +6,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import xyz.guutong.androidpdfviewer.PdfViewActivity;
 
 public class MainActivity extends AppCompatActivity {
     private EditText mPdfUrl;
     private Intent intent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,9 +27,15 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 intent.putExtra(PdfViewActivity.EXTRA_PDF_URL, mPdfUrl.getText().toString());
                 intent.putExtra(PdfViewActivity.EXTRA_SHOW_CLOSE_BUTTON, true);
-                startActivity(intent);
+                startActivityForResult(intent, 0);
             }
         });
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        int pageNum = Integer.parseInt(data.getStringExtra(PdfViewActivity.EXTRA_PAGE_NUM));
+        Toast.makeText(this, String.valueOf(pageNum), Toast.LENGTH_LONG).show();
     }
 }
